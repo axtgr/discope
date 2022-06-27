@@ -14,7 +14,8 @@
   "type": "module",
   "main": "./build/index.js",
   "scripts": {
-    "build": "cf build && tsc"
+    "build": "cf build && tsc",
+    "test": ""
   },
   "devDependencies": {
     "clear-folder": "^3.2.1",
