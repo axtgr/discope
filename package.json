@@ -13,6 +13,9 @@
   "packageManager": "yarn@3.1.1",
   "type": "module",
   "main": "./build/index.js",
+  "files": [
+    "./build"
+  ],
   "scripts": {
     "build": "cf build && tsc",
     "test": ""
