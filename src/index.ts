@@ -40,6 +40,15 @@ type Scope<
 
 const graphBuilder = new GraphBuilder()
 
+/**
+ * Defines a dependency that is instantiated only the first time it is resolved
+ *
+ * @example
+ *
+ * ```
+ * const httpClient = single(() => new HttpClient())
+ * ```
+ */
 function single<TArgs extends any[], TResolvedDependency>(
   resolver: DependencyResolver<TArgs, TResolvedDependency>
 ) {
@@ -57,6 +66,15 @@ function single<TArgs extends any[], TResolvedDependency>(
   }) as Dependency<TArgs, TResolvedDependency>
 }
 
+/**
+ * Defines a dependency that is instantiated each time it is resolved
+ *
+ * @example
+ *
+ * ```
+ * const logger = factory((prefix) => new Logger({ prefix }))
+ * ```
+ */
 function factory<TArgs extends any[], TResolvedDependency>(
   resolver: DependencyResolver<TArgs, TResolvedDependency>
 ) {
@@ -85,6 +103,19 @@ function createDepsFn<TResolvedDependencies extends ResolvedDependencies>(
   return fn
 }
 
+/**
+ * Defines a scope
+ *
+ * @example
+ *
+ * ```
+ * export default scope((deps) => {
+ *   return {
+ *     apiClient: single(() => new ApiClient(deps()))
+ *   }
+ * })
+ * ```
+ */
 function scope<
   TExports extends DependencyMap,
   TResolvedDependencies extends ResolvedDependencies | void = void
@@ -116,11 +147,19 @@ function buildDependencies(rootScopeNode: GraphNode<any>) {
   return graphBuilder.finish()
 }
 
+/**
+ * Builds the given root scope and dependencies. Returns the root node of the resulting
+ * graph.
+ */
 function build<TExports extends DependencyMap>(rootScope: Scope<any, TExports>) {
   let rootScopesNode = buildScopes(rootScope)
   return buildDependencies(rootScopesNode)
 }
 
+/**
+ * Builds the given root scope and dependencies. Returns the resolved exports of the
+ * root scope.
+ */
 function resolve<TExports extends DependencyMap>(rootScope: Scope<any, TExports>) {
   return build(rootScope).value
 }

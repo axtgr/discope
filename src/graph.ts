@@ -53,6 +53,10 @@ class GraphBuilder {
   }
 }
 
+/**
+ * Given a node of a graph, visits each node of the graph starting from leaves and
+ * finishing at the given node.
+ */
 function traverseFromLeaves(
   node: GraphNode,
   visitor: (node: GraphNode) => unknown,
