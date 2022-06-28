@@ -31,7 +31,7 @@ class GraphBuilder {
       this.nodeMap!.set(key, { parent: this.currentNode, children: [] })
     }
 
-    const node = this.nodeMap!.get(key) as GraphNode
+    let node = this.nodeMap!.get(key) as GraphNode
     this.currentNode!.children.push(node)
     this.currentNode = node
     node.value = valueInitializer()
@@ -44,7 +44,7 @@ class GraphBuilder {
       throw new Error("Cannot finish building a graph that isn't being built")
     }
 
-    const result = this.root!
+    let result = this.root!
     this.nodeMap = undefined
     this.root = undefined
     this.currentNode = undefined
@@ -62,7 +62,7 @@ function traverseFromLeaves(
   if (!visit) {
     visit = Promise.resolve()
       .then(() => {
-        const childVisits = node.children.map((child) => {
+        let childVisits = node.children.map((child) => {
           return traverseFromLeaves(child, visitor, visits)
         })
         return Promise.all(childVisits)

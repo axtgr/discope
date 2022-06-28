@@ -46,7 +46,7 @@ function single<TArgs extends any[], TResolvedDependency>(
   let executed = false
   let result: ReturnType<DependencyResolver>
   return ((...args) => {
-    const node = graphBuilder.addNode(resolver, () => {
+    let node = graphBuilder.addNode(resolver, () => {
       if (!executed) {
         result = resolver(...args)
         executed = true
@@ -61,7 +61,7 @@ function factory<TArgs extends any[], TResolvedDependency>(
   resolver: DependencyResolver<TArgs, TResolvedDependency>
 ) {
   return ((...args) => {
-    const node = graphBuilder.addNode(Symbol(), () => resolver(...args))
+    let node = graphBuilder.addNode(Symbol(), () => resolver(...args))
     return node.value
   }) as Dependency<TArgs, TResolvedDependency>
 }
@@ -80,7 +80,7 @@ function resolveDependencies(dependencies: DependencyMap | Dependency) {
 function createDepsFn<TResolvedDependencies extends ResolvedDependencies>(
   deps: UnresolveDependencies<TResolvedDependencies>
 ): Dependencies<TResolvedDependencies> {
-  const fn = (() => resolveDependencies(deps)) as Dependencies<TResolvedDependencies>
+  let fn = (() => resolveDependencies(deps)) as Dependencies<TResolvedDependencies>
   Object.assign(fn, deps)
   return fn
 }
@@ -90,7 +90,7 @@ function scope<
   TResolvedDependencies extends ResolvedDependencies | void = void
 >(resolver: ScopeResolver<TExports, TResolvedDependencies>) {
   return ((deps) => {
-    const node = graphBuilder.addNode(Symbol(), () => {
+    let node = graphBuilder.addNode(Symbol(), () => {
       return resolver((deps && createDepsFn(deps)) as any)
     })
     return node.value
@@ -117,8 +117,8 @@ function buildDependencies(rootScopeNode: GraphNode<any>) {
 }
 
 function build<TExports extends DependencyMap>(rootScope: Scope<any, TExports>) {
-  const rootScopesNode = buildScopes(rootScope)
-  const rootDependenciesNode = buildDependencies(rootScopesNode)
+  let rootScopesNode = buildScopes(rootScope)
+  let rootDependenciesNode = buildDependencies(rootScopesNode)
   return rootDependenciesNode.value
 }
 
