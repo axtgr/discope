@@ -118,8 +118,7 @@ function buildDependencies(rootScopeNode: GraphNode<any>) {
 
 function build<TExports extends DependencyMap>(rootScope: Scope<any, TExports>) {
   let rootScopesNode = buildScopes(rootScope)
-  let rootDependenciesNode = buildDependencies(rootScopesNode)
-  return rootDependenciesNode.value
+  return buildDependencies(rootScopesNode)
 }
 
 function resolve<TExports extends DependencyMap>(rootScope: Scope<any, TExports>) {
