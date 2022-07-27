@@ -175,9 +175,4 @@ export {
   buildDependencies,
   traverseFromLeaves,
 }
-export type {
-  Scope,
-  DependencyResolver as Dependency,
-  Unresolved as Dependencies,
-  GraphNode,
-}
+export type { Scope, DependencyResolver, Unresolved, GraphNode }
