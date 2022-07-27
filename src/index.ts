@@ -1,40 +1,37 @@
 import { GraphNode, GraphBuilder, traverseFromLeaves } from './graph.js'
 
-type ResolvedDependencies = Record<string, unknown>
+type Dependencies = Record<string, unknown>
 
 type DependencyResolver<TArgs extends any[] = unknown[], TDependency = unknown> = (
   ...args: TArgs
 ) => TDependency
 
-type Dependency<
-  TArgs extends any[] = unknown[],
-  TDependency = unknown
-> = DependencyResolver<TArgs, TDependency>
+type DependencyResolvers = Record<string, DependencyResolver<any, any>>
 
-type DependencyMap = Record<string, Dependency>
-
-type UnresolveDependencies<TResolvedDependencies extends ResolvedDependencies> = {
-  [K in keyof TResolvedDependencies]: Dependency<unknown[], TResolvedDependencies[K]>
+type ResolveDependencies<TResolvers extends DependencyResolvers> = {
+  [K in keyof TResolvers]: TResolvers[K] extends DependencyResolver<any, infer R>
+    ? R
+    : never
 }
 
-type ResolveDependencies<TResolvers extends DependencyMap> = {
-  [K in keyof TResolvers]: TResolvers[K] extends Dependency<any, infer R> ? R : never
+type UnresolveDependencies<TDependencies extends Dependencies> = {
+  [K in keyof TDependencies]: DependencyResolver<unknown[], TDependencies[K]>
 }
 
-type Dependencies<TResolvedDependencies extends ResolvedDependencies> =
-  UnresolveDependencies<TResolvedDependencies> & (() => TResolvedDependencies)
+type Unresolved<TDependencies extends Dependencies> =
+  UnresolveDependencies<TDependencies> & (() => TDependencies)
 
 type ScopeResolver<
-  TExports extends DependencyMap,
-  TResolvedDependencies extends ResolvedDependencies | void = void
-> = TResolvedDependencies extends ResolvedDependencies
-  ? (deps: Dependencies<TResolvedDependencies>) => TExports
+  TExports extends DependencyResolvers,
+  TResolvedDependencies extends Dependencies | void = void
+> = TResolvedDependencies extends Dependencies
+  ? (deps: Unresolved<TResolvedDependencies>) => TExports
   : () => TExports
 
 type Scope<
-  TExports extends DependencyMap | unknown = unknown,
-  TResolvedDependencies extends ResolvedDependencies | void = void
-> = TResolvedDependencies extends ResolvedDependencies
+  TExports extends DependencyResolvers | unknown = unknown,
+  TResolvedDependencies extends Dependencies | void = void
+> = TResolvedDependencies extends Dependencies
   ? (deps: UnresolveDependencies<TResolvedDependencies>) => TExports
   : () => TExports
 
@@ -63,7 +60,7 @@ function single<TArgs extends any[], TResolvedDependency>(
       return result
     })
     return node.value
-  }) as Dependency<TArgs, TResolvedDependency>
+  }) as DependencyResolver<TArgs, TResolvedDependency>
 }
 
 /**
@@ -81,10 +78,10 @@ function factory<TArgs extends any[], TResolvedDependency>(
   return ((...args) => {
     let node = graphBuilder.addNode(Symbol(), () => resolver(...args))
     return node.value
-  }) as Dependency<TArgs, TResolvedDependency>
+  }) as DependencyResolver<TArgs, TResolvedDependency>
 }
 
-function resolveDependencies(dependencies: DependencyMap | Dependency) {
+function resolveDependencies(dependencies: DependencyResolvers | DependencyResolver) {
   if (typeof dependencies === 'function') {
     return dependencies()
   }
@@ -92,13 +89,13 @@ function resolveDependencies(dependencies: DependencyMap | Dependency) {
   return Object.keys(dependencies).reduce((result, key) => {
     result[key] = resolveDependencies(dependencies[key])
     return result
-  }, {} as ResolvedDependencies)
+  }, {} as Dependencies)
 }
 
-function createDepsFn<TResolvedDependencies extends ResolvedDependencies>(
+function createDepsFn<TResolvedDependencies extends Dependencies>(
   deps: UnresolveDependencies<TResolvedDependencies>
-): Dependencies<TResolvedDependencies> {
-  let fn = (() => resolveDependencies(deps)) as Dependencies<TResolvedDependencies>
+): Unresolved<TResolvedDependencies> {
+  let fn = (() => resolveDependencies(deps)) as Unresolved<TResolvedDependencies>
   Object.assign(fn, deps)
   return fn
 }
@@ -117,8 +114,8 @@ function createDepsFn<TResolvedDependencies extends ResolvedDependencies>(
  * ```
  */
 function scope<
-  TExports extends DependencyMap,
-  TResolvedDependencies extends ResolvedDependencies | void = void
+  TExports extends DependencyResolvers,
+  TResolvedDependencies extends Dependencies | void = void
 >(resolver: ScopeResolver<TExports, TResolvedDependencies>) {
   return ((deps) => {
     let node = graphBuilder.addNode(Symbol(), () => {
@@ -131,7 +128,9 @@ function scope<
 /**
  * Given a root scope, builds a graph of the scopes and returns its root node.
  */
-function buildScopes<TExports extends DependencyMap>(rootScope: Scope<TExports, any>) {
+function buildScopes<TExports extends DependencyResolvers>(
+  rootScope: Scope<TExports, any>
+) {
   graphBuilder.start()
   rootScope({})
   return graphBuilder.finish().children[0] as GraphNode<ResolveDependencies<TExports>>
@@ -151,7 +150,7 @@ function buildDependencies(rootScopeNode: GraphNode<any>) {
  * Builds the given root scope and dependencies. Returns the root node of the resulting
  * graph.
  */
-function build<TExports extends DependencyMap>(rootScope: Scope<any, TExports>) {
+function build<TExports extends DependencyResolvers>(rootScope: Scope<any, TExports>) {
   let rootScopesNode = buildScopes(rootScope)
   return buildDependencies(rootScopesNode)
 }
@@ -160,7 +159,9 @@ function build<TExports extends DependencyMap>(rootScope: Scope<any, TExports>) 
  * Builds the given root scope and dependencies. Returns the resolved exports of the
  * root scope.
  */
-function resolve<TExports extends DependencyMap>(rootScope: Scope<any, TExports>) {
+function resolve<TExports extends DependencyResolvers>(
+  rootScope: Scope<any, TExports>
+) {
   return build(rootScope).value
 }
 
@@ -174,4 +175,9 @@ export {
   buildDependencies,
   traverseFromLeaves,
 }
-export type { Scope, Dependency, Dependencies, GraphNode }
+export type {
+  Scope,
+  DependencyResolver as Dependency,
+  Unresolved as Dependencies,
+  GraphNode,
+}
