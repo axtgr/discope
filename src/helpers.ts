@@ -1,4 +1,9 @@
-import type { Resolver } from './types'
+import type {
+  DependencyResolver,
+  DependencyResolvers,
+  ScopeInitializer,
+  Namespace,
+} from './types'
 import { getCurrentContainer } from './global'
 
 /**
@@ -11,7 +16,7 @@ import { getCurrentContainer } from './global'
  * ```
  */
 function singleton<TArgs extends any[], TResolvedDependency>(
-  resolver: Resolver<TArgs, TResolvedDependency>
+  resolver: DependencyResolver<TArgs, TResolvedDependency>
 ) {
   let container = getCurrentContainer()
 
@@ -32,7 +37,7 @@ function singleton<TArgs extends any[], TResolvedDependency>(
  * ```
  */
 function factory<TArgs extends any[], TResolvedDependency>(
-  resolver: Resolver<TArgs, TResolvedDependency>
+  resolver: DependencyResolver<TArgs, TResolvedDependency>
 ) {
   let container = getCurrentContainer()
 
@@ -57,9 +62,9 @@ function factory<TArgs extends any[], TResolvedDependency>(
  * ```
  */
 function scope<
-  TExports extends Resolvers,
-  TDependencies extends Resolvers | void = void
->(resolver: ScopeResolver<TExports, TDependencies>) {
+  TExports extends DependencyResolvers,
+  TDependencies extends Namespace<any, any>
+>(initializer: ScopeInitializer<TExports, TDependencies>) {
   return (deps) => {
     let container = getCurrentContainer()
 
@@ -67,7 +72,7 @@ function scope<
       throw new Error('Attempting to create a scope in an undefined container')
     }
 
-    return container.scope(resolver)(deps)
+    return container.scope(initializer)(deps)
   }
 }
 

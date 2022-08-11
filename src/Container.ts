@@ -1,6 +1,19 @@
-import type { Resolver, Resolvers } from './types'
+import type {
+  Scope,
+  DependencyResolver,
+  DependencyResolvers,
+  ScopeInitializer,
+  Resolve,
+} from './types'
 import Graph, { GraphNode } from './Graph'
-import { createNamespace, isNamespace, Namespace, NamespaceMode } from './namespace'
+import {
+  createNamespace,
+  isNamespace,
+  Namespace,
+  NamespaceMode,
+  NamespaceToResolvers,
+  ResolversToNamespace,
+} from './namespace'
 import { getCurrentContainer, setCurrentContainer } from './global'
 
 enum ContainerStatus {
@@ -30,44 +43,46 @@ class Container {
     }
   }
 
-  private getModeForNamespace() {
+  private getNamespaceMode() {
     return this.status === ContainerStatus.ResolvingDependencies
       ? NamespaceMode.Dependencies
       : NamespaceMode.Scopes
   }
 
-  public namespace(getResolvers: () => Resolvers) {
-    return createNamespace(getResolvers, () => this.getModeForNamespace())
+  public namespace<TResolvers extends DependencyResolvers>(
+    getResolvers: () => TResolvers
+  ) {
+    return createNamespace(getResolvers, () => this.getNamespaceMode())
   }
 
   public singleton<TArgs extends any[], TResolvedDependency>(
-    resolver: Resolver<TArgs, TResolvedDependency>
-  ) {
+    initializer: DependencyResolver<TArgs, TResolvedDependency>
+  ): DependencyResolver<TArgs, TResolvedDependency> {
     let container = this
     let resolved = false
-    let result: ReturnType<Resolver>
+    let result: ReturnType<DependencyResolver>
 
     return function singletonDependency(...args: TArgs) {
       let boundResolver = container.bindCallback(() => {
         if (!resolved) {
-          result = resolver(...args)
+          result = initializer(...args)
           resolved = true
         }
         return result
       }, ContainerStatus.ResolvingDependencies)
-      let node = container.dependencyGraph.addNode(resolver, boundResolver)
+      let node = container.dependencyGraph.addNode(initializer, boundResolver)
       return node.value
     }
   }
 
   public factory<TArgs extends any[], TResolvedDependency>(
-    resolver: Resolver<TArgs, TResolvedDependency>
-  ) {
+    initializer: DependencyResolver<TArgs, TResolvedDependency>
+  ): DependencyResolver<TArgs, TResolvedDependency> {
     let container = this
 
     return function factoryDependency(...args: TArgs) {
       let boundResolver = container.bindCallback(
-        () => resolver(...args),
+        () => initializer(...args),
         ContainerStatus.ResolvingDependencies
       )
       let node = container.dependencyGraph.addNode(Symbol(), boundResolver)
@@ -76,28 +91,28 @@ class Container {
   }
 
   public scope<
-    TExports extends Resolvers,
-    TDependencies extends Resolvers | void = void
-  >(resolver: ScopeResolver<TExports, TDependencies>) {
-    return (dependencyResolvers) => {
+    TExports extends DependencyResolvers,
+    TDependencies extends Namespace<any, any>
+  >(initializer: ScopeInitializer<TExports, TDependencies>) {
+    return ((resolvers: NamespaceToResolvers<TDependencies>) => {
       let builder = this.bindCallback(() => {
-        let namespace: Namespace<any, any>
+        let namespace: TDependencies
 
-        if (isNamespace(dependencyResolvers)) {
-          namespace = dependencyResolvers
-        } else if (typeof dependencyResolvers === 'function') {
+        if (isNamespace(resolvers)) {
+          namespace = resolvers
+        } else if (typeof resolvers === 'function') {
           namespace = this.namespace(
-            this.bindCallback(dependencyResolvers, ContainerStatus.ResolvingScopes)
-          )
+            this.bindCallback(resolvers, ContainerStatus.ResolvingScopes)
+          ) as TDependencies
         } else {
-          namespace = this.namespace(() => dependencyResolvers)
+          namespace = this.namespace(() => resolvers) as TDependencies
         }
 
-        return resolver(namespace)
+        return initializer(namespace)
       }, ContainerStatus.ResolvingScopes)
       let node = this.scopeGraph.addNode(Symbol(), builder)
       return this.namespace(() => node.value)
-    }
+    }) as unknown as Scope<ResolversToNamespace<TExports>, Resolve<TDependencies>>
   }
 
   public traverseScopesFromLeaves(visitor: (node: GraphNode<any>) => unknown) {

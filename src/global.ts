@@ -2,18 +2,34 @@ import type Container from './Container'
 
 const CURRENT_CONTAINER = '__SCOPULA_CURRENT_CONTAINER__'
 
-declare global {
-  interface Window {
-    [CURRENT_CONTAINER]: Container | undefined
-  }
+interface GlobalObject {
+  [CURRENT_CONTAINER]: Container | undefined
+}
+
+let globalObject: GlobalObject
+
+// @ts-expect-error
+if (typeof self !== 'undefined') {
+  // @ts-expect-error
+  globalObject = self as any
+  // @ts-expect-error
+} else if (typeof window !== 'undefined') {
+  // @ts-expect-error
+  globalObject = window as any
+  // @ts-expect-error
+} else if (typeof global !== 'undefined') {
+  // @ts-expect-error
+  globalObject = global as any
+} else {
+  globalObject = Function('return this')()
 }
 
 function getCurrentContainer() {
-  return globalThis[CURRENT_CONTAINER]
+  return globalObject[CURRENT_CONTAINER]
 }
 
-function setCurrentContainer(container: Container) {
-  globalThis[CURRENT_CONTAINER] = container
+function setCurrentContainer(container: Container | undefined) {
+  globalObject[CURRENT_CONTAINER] = container
   return container
 }
 

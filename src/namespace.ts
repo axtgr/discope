@@ -1,4 +1,9 @@
-import type { Dependency, Dependencies, Resolver, Resolvers } from './types'
+import type {
+  Dependencies,
+  DependencyResolver,
+  DependencyResolvers,
+  Resolve,
+} from './types'
 
 const IS_NAMESPACE = Symbol('IS_NAMESPACE')
 
@@ -7,79 +12,112 @@ enum NamespaceMode {
   Dependencies = 'dependencies',
 }
 
-type DependencyOrNever<
-  TArgs extends unknown[] | undefined,
-  TDependency extends Dependency
-> = undefined extends TArgs
-  ? TDependency
+/**
+ * Returns true if every element in TArgs accepts undefined
+ */
+type AreArgsOptional<TArgs extends unknown[] | undefined> = undefined extends TArgs
+  ? true
   : [] extends TArgs
-  ? TDependency
+  ? true
   : [undefined] extends TArgs
-  ? TDependency
+  ? true
   : [undefined, undefined] extends TArgs
-  ? TDependency
+  ? true
   : [undefined, undefined, undefined] extends TArgs
-  ? TDependency
+  ? true
   : [undefined, undefined, undefined, undefined] extends TArgs
-  ? TDependency
+  ? true
   : [undefined, undefined, undefined, undefined, undefined] extends TArgs
-  ? TDependency
+  ? true
   : [undefined, undefined, undefined, undefined, undefined, undefined] extends TArgs
-  ? TDependency
-  : never
+  ? true
+  : false
 
+/**
+ * Given a record of dependencies TDependencies, finds each dependency that requires
+ * arguments to be resolved and replaces it with never
+ */
 type DependenciesWithNoArgs<
   TDependencies extends Dependencies,
   TArgs extends Partial<{
     [K in keyof TDependencies]: unknown[]
   }>
 > = {
-  [K in keyof TDependencies]: DependencyOrNever<TArgs[K], TDependencies[K]>
+  [K in keyof TDependencies]: AreArgsOptional<TArgs[K]> extends true
+    ? TDependencies[K]
+    : never
 }
 
 type Namespace<
   TDependencies extends Dependencies,
-  TArgs extends Partial<{
-    [K in keyof TDependencies]: unknown[]
-  }>
+  TArgs extends
+    | Partial<{
+        [K in keyof TDependencies]: unknown[]
+      }>
+    | Record<keyof TDependencies, []> = Record<keyof TDependencies, []>
 > = DependenciesWithNoArgs<TDependencies, TArgs> & {
-  <TKey extends keyof TDependencies>(key: TKey): Resolver<
-    TArgs[TKey] extends unknown[] ? TArgs[TKey] : [],
-    TDependencies[TKey]
-  >
+  <TKey extends undefined | keyof TDependencies>(
+    key?: TKey
+  ): TKey extends keyof TDependencies
+    ? DependencyResolver<
+        TArgs[TKey] extends unknown[] ? TArgs[TKey] : [],
+        TDependencies[TKey]
+      >
+    : TDependencies
 } & {
   [IS_NAMESPACE]: boolean
 }
+
+type NamespaceToResolvers<TNamespace extends Namespace<any, any>> = Omit<
+  {
+    [K in keyof TNamespace]: TNamespace[K]
+  },
+  typeof IS_NAMESPACE
+>
+
+type ResolversToNamespace<TResolvers extends DependencyResolvers> = Namespace<
+  {
+    [K in keyof TResolvers]: TResolvers[K] extends DependencyResolver<any, infer R>
+      ? R
+      : never
+  },
+  {
+    [K in keyof TResolvers]: TResolvers[K] extends DependencyResolver<infer R, any>
+      ? R
+      : never
+  }
+>
 
 function isNamespace(value: any): value is Namespace<any, any> {
   return Boolean(value?.[IS_NAMESPACE])
 }
 
-function createNamespace(
-  getResolvers: () => Resolvers,
+function createNamespace<TResolvers extends DependencyResolvers>(
+  getResolvers: () => TResolvers,
   getMode: () => NamespaceMode
-): Namespace<any, any> {
-  let resolvers: Resolvers
+): ResolversToNamespace<TResolvers> {
+  let resolvers: TResolvers
   let resolvedValues = Object.create(null)
-  let namespace = new Proxy(function namespace() {}, {
-    apply(_, __, [key]) {
-      if (!key) {
-        resolvers ??= getResolvers()
-        return Object.keys(resolvers).reduce((result, key) => {
-          result[key] = namespace[key]()
-          return result
-        }, {})
-      }
+  let namespace = (key?: keyof TResolvers) => {
+    key = typeof key === 'number' ? String(key) : key
 
+    if (!key) {
       resolvers ??= getResolvers()
+      return Object.keys(resolvers).reduce((result, key: keyof TResolvers) => {
+        result[key] = proxy[key as any]()
+        return result
+      }, {} as Resolve<TResolvers>)
+    }
 
-      if (!Object.getOwnPropertyDescriptor(resolvers, key)) {
-        throw new Error(`Unable to resolve "${key}"`)
-      }
+    resolvers ??= getResolvers()
 
-      return resolvers[key]
-    },
+    if (!Object.getOwnPropertyDescriptor(resolvers, key)) {
+      throw new Error(`Unable to resolve "${String(key)}"`)
+    }
 
+    return resolvers[key as any]
+  }
+  let proxy = new Proxy(namespace, {
     has(_, key) {
       resolvers ??= getResolvers()
       return Reflect.has(resolvers, key)
@@ -98,16 +136,16 @@ function createNamespace(
 
       if (getMode() === NamespaceMode.Dependencies) {
         if (!Object.getOwnPropertyDescriptor(resolvedValues, key)) {
-          resolvedValues[key] = resolvers[key]()
+          resolvedValues[key] = resolvers[key as any]()
         }
         return resolvedValues[key]
       }
 
-      return resolvers[key]
+      return resolvers[key as any]
     },
 
     set() {
-      throw new Error('Manually adding dependencies to a namespace is forbidden')
+      throw new Error('Adding dependencies to a namespace is forbidden')
     },
 
     ownKeys() {
@@ -120,7 +158,7 @@ function createNamespace(
         return undefined
       }
 
-      if (['prototype', 'caller', 'arguments'].includes(key as string)) {
+      if (['prototype', 'caller', 'arguments'].indexOf(key as any) !== -1) {
         return Object.getOwnPropertyDescriptor(target, key)
       }
 
@@ -128,12 +166,12 @@ function createNamespace(
         configurable: true,
         enumerable: true,
         writable: false,
-        value: namespace[key],
+        value: proxy[key as any],
       }
     },
   }) as Namespace<any, any>
-  return namespace
+  return proxy
 }
 
 export { createNamespace, isNamespace, NamespaceMode }
-export type { Namespace }
+export type { Namespace, NamespaceToResolvers, ResolversToNamespace }
