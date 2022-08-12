@@ -103,6 +103,13 @@ class Container {
 
         if (isNamespace(deps)) {
           namespace = deps
+        } else if (typeof deps === 'function') {
+          namespace = this.namespace(
+            this.bindCallback(
+              deps as () => DependencyResolvers,
+              ContainerStatus.ResolvingScopes
+            )
+          ) as TDependencies
         } else {
           namespace = this.namespace(() => {
             return deps === undefined ? {} : deps!
