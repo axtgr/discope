@@ -75,7 +75,7 @@ type NamespaceToResolvers<TNamespace extends Namespace<any, any>> = Omit<
   typeof IS_NAMESPACE
 >
 
-type ResolversToNamespace<TResolvers extends DependencyResolvers> = Namespace<
+type ResolversToNamespace<TResolvers extends Record<string, unknown>> = Namespace<
   {
     [K in keyof TResolvers]: TResolvers[K] extends DependencyResolver<any, infer R>
       ? R

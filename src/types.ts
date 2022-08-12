@@ -17,13 +17,13 @@ type DependencyResolver<
 type DependencyResolvers = Record<string, DependencyResolver>
 
 type ScopeInitializer<
-  TExports extends Dependencies,
-  TDependencies extends Namespace<any, any> | void = void
+  TExports,
+  TDependencies extends Namespace<any, any> | undefined = undefined
 > = (deps: TDependencies) => TExports
 
 type Scope<
-  TExports extends Namespace<any, any> | unknown = unknown,
-  TDependencies extends Dependencies | void = void
+  TExports extends Namespace<any, any> | unknown,
+  TDependencies extends Dependencies | undefined
 > = (deps: TDependencies) => TExports
 
 type Resolve<TResolvers extends DependencyResolvers> = {

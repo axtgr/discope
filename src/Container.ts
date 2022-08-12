@@ -3,7 +3,6 @@ import type {
   DependencyResolver,
   DependencyResolvers,
   ScopeInitializer,
-  Resolve,
 } from './types'
 import Graph, { GraphNode } from './Graph'
 import {
@@ -91,28 +90,30 @@ class Container {
   }
 
   public scope<
-    TExports extends DependencyResolvers,
-    TDependencies extends Namespace<any, any>
+    TExports extends Record<string, unknown>,
+    TDependencies extends Namespace<any, any> | undefined
   >(initializer: ScopeInitializer<TExports, TDependencies>) {
-    return ((resolvers: NamespaceToResolvers<TDependencies>) => {
+    return ((
+      deps: TDependencies extends Namespace<any, any>
+        ? NamespaceToResolvers<TDependencies>
+        : undefined
+    ) => {
       let builder = this.bindCallback(() => {
         let namespace: TDependencies
 
-        if (isNamespace(resolvers)) {
-          namespace = resolvers
-        } else if (typeof resolvers === 'function') {
-          namespace = this.namespace(
-            this.bindCallback(resolvers, ContainerStatus.ResolvingScopes)
-          ) as TDependencies
+        if (isNamespace(deps)) {
+          namespace = deps
         } else {
-          namespace = this.namespace(() => resolvers) as TDependencies
+          namespace = this.namespace(() => {
+            return deps === undefined ? {} : deps!
+          }) as TDependencies
         }
 
         return initializer(namespace)
       }, ContainerStatus.ResolvingScopes)
       let node = this.scopeGraph.addNode(Symbol(), builder)
       return this.namespace(() => node.value)
-    }) as unknown as Scope<ResolversToNamespace<TExports>, Resolve<TDependencies>>
+    }) as unknown as Scope<ResolversToNamespace<TExports>, TDependencies>
   }
 
   public traverseScopesFromLeaves(visitor: (node: GraphNode<any>) => unknown) {
