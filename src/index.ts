@@ -1,7 +1,14 @@
-import type { Namespace, Scope, ScopeInitializer } from './types'
+import type {
+  Namespace,
+  Scope,
+  ScopeInitializer,
+  DependencyResolver,
+  Dependency,
+} from './types'
 import { getCurrentContainer, setCurrentContainer } from './global'
 import { scope as _scope, singleton, factory } from './helpers'
 import Container from './Container'
+import Graph, { GraphNode } from './Graph'
 import { ResolversToNamespace } from './namespace'
 
 /**
@@ -34,4 +41,13 @@ export {
   Container,
   getCurrentContainer,
   setCurrentContainer,
+}
+export type {
+  Namespace,
+  Scope,
+  ScopeInitializer,
+  DependencyResolver,
+  Dependency,
+  Graph,
+  GraphNode,
 }
