@@ -1,9 +1,9 @@
 {
-  "name": "scopula",
+  "name": "discope",
   "version": "0.1.4",
   "description": "",
   "author": "Alex Schneider <me@schneider.ax>",
-  "repository": "https://github.com/axtgr/scopula",
+  "repository": "https://github.com/axtgr/discope",
   "license": "ISC",
   "keywords": [
     "scopes",

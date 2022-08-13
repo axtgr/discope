@@ -368,6 +368,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"discope@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "discope@workspace:."
+  dependencies:
+    "@typescript-eslint/eslint-plugin": ^5.30.0
+    "@typescript-eslint/parser": ^5.30.0
+    clear-folder: ^3.2.1
+    eslint: ^8.18.0
+    eslint-config-prettier: ^8.5.0
+    eslint-plugin-prefer-let: ^3.0.1
+    eslint-plugin-prettier: ^4.1.0
+    prettier: ^2.7.1
+    typescript: ^4.7.4
+  languageName: unknown
+  linkType: soft
+
 "doctrine@npm:^3.0.0":
   version: 3.0.0
   resolution: "doctrine@npm:3.0.0"
@@ -1028,22 +1044,6 @@ __metadata:
   checksum: cb4f97ad25a75ebc11a8ef4e33bb962f8af8516bb2001082ceabd8902e15b98f4b84b4f8a9b222e5d57fc3bd1379c483886ed4619367a7680dad65316993021d
   languageName: node
   linkType: hard
-
-"scopula@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "scopula@workspace:."
-  dependencies:
-    "@typescript-eslint/eslint-plugin": ^5.30.0
-    "@typescript-eslint/parser": ^5.30.0
-    clear-folder: ^3.2.1
-    eslint: ^8.18.0
-    eslint-config-prettier: ^8.5.0
-    eslint-plugin-prefer-let: ^3.0.1
-    eslint-plugin-prettier: ^4.1.0
-    prettier: ^2.7.1
-    typescript: ^4.7.4
-  languageName: unknown
-  linkType: soft
 
 "semver@npm:^7.3.7":
   version: 7.3.7

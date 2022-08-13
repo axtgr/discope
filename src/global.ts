@@ -1,6 +1,6 @@
 import type Container from './Container'
 
-const CURRENT_CONTAINER = '__SCOPULA_CURRENT_CONTAINER__'
+const CURRENT_CONTAINER = '__DISCOPE_CURRENT_CONTAINER__'
 
 interface GlobalObject {
   [CURRENT_CONTAINER]: Container | undefined
