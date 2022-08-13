@@ -17,9 +17,9 @@ import { NamespaceToResolvers, ResolversToNamespace } from './namespace'
  * @example
  *
  * ```
- * export default scope(({ httpClient }) => {
+ * export default scope((deps) => {
  *   return {
- *     apiClient: single(() => new ApiClient({ httpClient }))
+ *     apiClient: single(() => new ApiClient({ client: deps.httpClient }))
  *   }
  * })
  * ```
@@ -28,9 +28,12 @@ function scope<
   TExports extends Record<string, unknown>,
   TDependencies extends Namespace<any, any> | undefined
 >(initializer: ScopeInitializer<TExports, TDependencies>) {
+  // This is the difference from helpers/scope(). If there is no current container,
+  // we create one.
   if (!getCurrentContainer()) {
     setCurrentContainer(new Container())
   }
+
   return _scope(initializer) as Scope<
     ResolversToNamespace<TExports>,
     TDependencies extends Namespace<any, any>

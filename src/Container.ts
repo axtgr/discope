@@ -26,6 +26,9 @@ class Container {
   public dependencyGraph = new Graph()
   public status: ContainerStatus = ContainerStatus.Idle
 
+  /**
+   * Returns the given callback bound to the current container and the given status
+   */
   private bindCallback<TArgs extends unknown[], TReturnValue>(
     cb: (...args: TArgs) => TReturnValue,
     status?: ContainerStatus
@@ -48,6 +51,9 @@ class Container {
       : NamespaceMode.Scopes
   }
 
+  /**
+   * Defines a namespace
+   */
   public namespace<TResolvers extends DependencyResolvers>(
     getResolvers: () => TResolvers
   ) {
@@ -69,6 +75,15 @@ class Container {
     }
   }
 
+  /**
+   * Defines a dependency that is instantiated only the first time it is resolved
+   *
+   * @example
+   *
+   * ```
+   * const httpClient = container.single(() => new HttpClient())
+   * ```
+   */
   public singleton<TArgs extends any[], TResolvedDependency>(
     initializer: DependencyResolver<TArgs, TResolvedDependency>
   ): DependencyResolver<TArgs, TResolvedDependency> {
@@ -77,12 +92,34 @@ class Container {
     return this.createDependency(() => initializer, initializer)
   }
 
+  /**
+   * Defines a dependency that is instantiated each time it is resolved
+   *
+   * @example
+   *
+   * ```
+   * const logger = container.factory((prefix) => new Logger({ prefix }))
+   * ```
+   */
   public factory<TArgs extends any[], TResolvedDependency>(
     initializer: DependencyResolver<TArgs, TResolvedDependency>
   ): DependencyResolver<TArgs, TResolvedDependency> {
     return this.createDependency(() => Symbol(), initializer)
   }
 
+  /**
+   * Defines a scope
+   *
+   * @example
+   *
+   * ```
+   * export default container.scope((deps) => {
+   *   return {
+   *     apiClient: container.single(() => new ApiClient({ client: deps.httpClient }))
+   *   }
+   * })
+   * ```
+   */
   public scope<
     TExports extends Record<string, unknown>,
     TDependencies extends Namespace<any, any> | undefined
@@ -122,10 +159,16 @@ class Container {
     >
   }
 
+  /**
+   * Visits each node of the scope graph starting from leaves and finishing at the root.
+   */
   public traverseScopesFromLeaves(visitor: (node: GraphNode<any>) => unknown) {
     return this.dependencyGraph.traverseFromLeaves(visitor)
   }
 
+  /**
+   * Visits each node of the dependency graph starting from leaves and finishing at the root.
+   */
   public traverseDependenciesFromLeaves(visitor: (node: GraphNode<any>) => unknown) {
     return this.dependencyGraph.traverseFromLeaves(visitor)
   }

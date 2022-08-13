@@ -45,14 +45,20 @@ function factory<TArgs extends any[], TResolvedDependency>(
 }
 
 /**
- * Defines a scope
+ * Defines a scope.
+ *
+ * Unlike the scope() from the index file, this version doesn't instantiate or even
+ * import a container. This is useful if you have multiple scripts with scopes loaded
+ * on a single web page. Using the index version of this function in one main script will
+ * create a container, and using this version in all the other scripts will prevent
+ * the container dependencies from being bundled in them.
  *
  * @example
  *
  * ```
- * export default scope(({ httpClient }) => {
+ * export default scope((deps) => {
  *   return {
- *     apiClient: single(() => new ApiClient({ httpClient }))
+ *     apiClient: single(() => new ApiClient({ client: deps.httpClient }))
  *   }
  * })
  * ```
