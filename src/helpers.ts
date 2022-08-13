@@ -1,6 +1,6 @@
-import type { DependencyResolver, ScopeInitializer, Namespace } from './types'
+import type { DependencyResolver, ScopeInitializer, Namespace, Scope } from './types'
 import { getCurrentContainer } from './global'
-import { NamespaceToResolvers } from './namespace'
+import { NamespaceToResolvers, ResolversToNamespace } from './namespace'
 
 /**
  * Defines a dependency that is instantiated only the first time it is resolved
@@ -61,7 +61,7 @@ function scope<
   TExports extends Record<string, unknown>,
   TDependencies extends Namespace<any, any> | undefined
 >(initializer: ScopeInitializer<TExports, TDependencies>) {
-  return (
+  return ((
     deps: TDependencies extends Namespace<any, any>
       ? NamespaceToResolvers<TDependencies>
       : undefined
@@ -72,9 +72,13 @@ function scope<
       throw new Error('Attempting to create a scope in an undefined container')
     }
 
-    // @ts-expect-error
-    return container.scope(initializer)(deps)
-  }
+    return container.scope(initializer)(deps as any)
+  }) as unknown as Scope<
+    ResolversToNamespace<TExports>,
+    TDependencies extends Namespace<any, any>
+      ? NamespaceToResolvers<TDependencies>
+      : undefined
+  >
 }
 
 export { scope, singleton, factory }

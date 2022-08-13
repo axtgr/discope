@@ -9,7 +9,7 @@ import { getCurrentContainer, setCurrentContainer } from './global'
 import { scope as _scope, singleton, factory } from './helpers'
 import Container from './Container'
 import Graph, { GraphNode } from './Graph'
-import { ResolversToNamespace } from './namespace'
+import { NamespaceToResolvers, ResolversToNamespace } from './namespace'
 
 /**
  * Defines a scope
@@ -31,7 +31,12 @@ function scope<
   if (!getCurrentContainer()) {
     setCurrentContainer(new Container())
   }
-  return _scope(initializer) as Scope<ResolversToNamespace<TExports>, TDependencies>
+  return _scope(initializer) as Scope<
+    ResolversToNamespace<TExports>,
+    TDependencies extends Namespace<any, any>
+      ? NamespaceToResolvers<TDependencies>
+      : undefined
+  >
 }
 
 export {

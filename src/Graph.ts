@@ -1,6 +1,5 @@
 interface GraphNode<TValue = any> {
   children: GraphNode[]
-  parent?: GraphNode
   value?: TValue
 }
 
@@ -12,11 +11,11 @@ class Graph {
   /**
    * Creates a child node for the current node
    */
-  public addNode<TValue>(builder: () => TValue): GraphNode
-  public addNode<TValue>(key: unknown, builder: () => TValue): GraphNode
-  public addNode<TValue>(key: unknown, builder?: () => TValue): GraphNode {
+  public addNode<TValue>(initializer: () => TValue): GraphNode
+  public addNode<TValue>(key: unknown, initializer: () => TValue): GraphNode
+  public addNode<TValue>(key: unknown, initializer?: () => TValue): GraphNode {
     if (arguments.length === 1) {
-      builder = key as () => TValue
+      initializer = key as () => TValue
       key = Symbol()
     }
 
@@ -27,7 +26,7 @@ class Graph {
       node = { children: [] }
       this.nodeMap!.set(key, node)
       this.currentNode = node
-      node.value = builder!()
+      node.value = initializer!()
       this.currentNode = currentNode
     }
 
@@ -42,8 +41,8 @@ class Graph {
   private _traverseFromLeaves(
     visitor: (node: GraphNode) => unknown,
     node: GraphNode,
-    visits: Map<GraphNode, unknown>
-  ) {
+    visits: Map<GraphNode, Promise<unknown>>
+  ): Promise<unknown> {
     let visit = visits.get(node)
     if (!visit) {
       visit = Promise.resolve()
