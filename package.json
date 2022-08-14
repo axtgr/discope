@@ -24,7 +24,8 @@
   },
   "files": [
     "./build",
-    "./src"
+    "./src",
+    "./helpers.ts"
   ],
   "scripts": {
     "prepack": "tsc",
