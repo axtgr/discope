@@ -4,12 +4,12 @@ import type {
   ScopeInitializer,
   DependencyResolver,
   Dependency,
-} from './types'
-import { getCurrentContainer, setCurrentContainer } from './global'
-import { scope as _scope, singleton, factory } from './helpers'
-import Container from './Container'
-import Graph, { GraphNode } from './Graph'
-import { NamespaceToResolvers, ResolversToNamespace } from './namespace'
+} from './types.js'
+import { getCurrentContainer, setCurrentContainer } from './global.js'
+import { scope as _scope, singleton, factory } from './helpers.js'
+import Container from './Container.js'
+import Graph, { GraphNode } from './Graph.js'
+import { NamespaceToResolvers, ResolversToNamespace } from './namespace.js'
 
 /**
  * Defines a scope

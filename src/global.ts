@@ -1,4 +1,4 @@
-import type Container from './Container'
+import type Container from './Container.js'
 
 const CURRENT_CONTAINER = '__DISCOPE_CURRENT_CONTAINER__'
 

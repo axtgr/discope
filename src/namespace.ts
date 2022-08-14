@@ -3,7 +3,7 @@ import type {
   DependencyResolver,
   DependencyResolvers,
   Resolve,
-} from './types'
+} from './types.js'
 
 const IS_NAMESPACE = Symbol('IS_NAMESPACE')
 

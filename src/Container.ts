@@ -3,8 +3,8 @@ import type {
   DependencyResolver,
   DependencyResolvers,
   ScopeInitializer,
-} from './types'
-import Graph, { GraphNode } from './Graph'
+} from './types.js'
+import Graph, { GraphNode } from './Graph.js'
 import {
   createNamespace,
   isNamespace,
@@ -12,8 +12,8 @@ import {
   NamespaceMode,
   NamespaceToResolvers,
   ResolversToNamespace,
-} from './namespace'
-import { getCurrentContainer, setCurrentContainer } from './global'
+} from './namespace.js'
+import { getCurrentContainer, setCurrentContainer } from './global.js'
 
 enum ContainerStatus {
   Idle = 'idle',

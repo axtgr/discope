@@ -1,6 +1,6 @@
-import type { DependencyResolver, ScopeInitializer, Namespace, Scope } from './types'
-import { getCurrentContainer } from './global'
-import { NamespaceToResolvers, ResolversToNamespace } from './namespace'
+import type { DependencyResolver, ScopeInitializer, Namespace, Scope } from './types.js'
+import { getCurrentContainer } from './global.js'
+import { NamespaceToResolvers, ResolversToNamespace } from './namespace.js'
 
 /**
  * Defines a dependency that is instantiated only the first time it is resolved
