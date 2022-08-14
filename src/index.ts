@@ -3,7 +3,10 @@ import type {
   Scope,
   ScopeInitializer,
   DependencyResolver,
+  DependencyResolvers,
   Dependency,
+  Dependencies,
+  DependencyInitializer,
 } from './types.js'
 import { getCurrentContainer, setCurrentContainer } from './global.js'
 import { scope as _scope, singleton, factory } from './helpers.js'
@@ -55,7 +58,10 @@ export type {
   Scope,
   ScopeInitializer,
   DependencyResolver,
+  DependencyResolvers,
   Dependency,
+  Dependencies,
+  DependencyInitializer,
   Graph,
   GraphNode,
 }
