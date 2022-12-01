@@ -1,5 +1,5 @@
 {
-  "include": ["./src"],
+  "files": ["src/index.ts"],
   "compilerOptions": {
     "outDir": "build",
     "lib": ["ES2015"],
