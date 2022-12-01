@@ -29,7 +29,7 @@
     "./tsconfig.json"
   ],
   "scripts": {
-    "prepack": "tsc",
+    "prepack": "npm exec --package typescript -- tsc",
     "build": "cf build && tsc",
     "test": ""
   },
