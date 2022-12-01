@@ -37,8 +37,8 @@ jobs:
           commit: ${{ github.sha }}
       - name: Make the package public
         run: npx json -I -f package.json -e "delete this.private"
-      # - name: Publish to NPM
-      #   run: npm publish --registry=https://registry.npmjs.org/ --//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}
+      - name: Publish to NPM
+        run: npm publish --registry=https://registry.npmjs.org/ --//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}
       - name: Add the repository owner as the scope if it's not set
         run: 'npx json -I -f package.json -e "this.name[0] !== ''@'' && (this.name = ''@${{ github.repository_owner }}/'' + this.name)"'
       - name: Publish to GPR
