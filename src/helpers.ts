@@ -8,7 +8,7 @@ import { NamespaceToResolvers, ResolversToNamespace } from './namespace.js'
  * @example
  *
  * ```
- * const httpClient = single(() => new HttpClient())
+ * const httpClient = singleton(() => new HttpClient())
  * ```
  */
 function singleton<TArgs extends any[], TResolvedDependency>(
